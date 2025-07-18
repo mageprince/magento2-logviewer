@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * MagePrince
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the mageprince.com license that is
+ * available through the world-wide-web at this URL:
+ * https://mageprince.com/end-user-license-agreement
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category    MagePrince
+ * @package     Mageprince_Faq
+ * @copyright   Copyright (c) MagePrince (https://mageprince.com/)
+ * @license     https://mageprince.com/end-user-license-agreement
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <log_viewer>
+            <general>
+                <enable>1</enable>
+                <lines_to_show>500</lines_to_show>
+                <items_per_page>10</items_per_page>
+                <default_sort_column>mod_time</default_sort_column>
+                <default_sort_dir>desc</default_sort_dir>
+                <allow_delete>1</allow_delete>
+                <allow_download>1</allow_download>
+            </general>
+        </log_viewer>
+    </default>
+</config>

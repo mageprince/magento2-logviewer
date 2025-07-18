@@ -1,0 +1,89 @@
+<?php
+/**
+ * MagePrince
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the mageprince.com license that is
+ * available through the world-wide-web at this URL:
+ * https://mageprince.com/end-user-license-agreement
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category    MagePrince
+ * @package     Mageprince_Faq
+ * @copyright   Copyright (c) MagePrince (https://mageprince.com/)
+ * @license     https://mageprince.com/end-user-license-agreement
+ */
+
+use Mageprince\LogViewer\Block\LogFile;
+use Magento\Framework\Escaper;
+
+/**
+ * @var LogFile $block
+ * @var Escaper $escaper
+ */
+$logFile = $block->getFileName();
+$displayLines = $block->getLinesToShowPerPageCount();
+$logPath = BP . '/var/log/' . $logFile;
+$previousLogUrl = $block->getLoadPreviousLogUrl();
+?>
+<div class="admin__page-section-item-content log-container">
+    <button id="load-previous"
+            data-file="<?= $escaper->escapeHtmlAttr($logFile) ?>"
+            data-start="<?= $escaper->escapeHtmlAttr($displayLines)?>"
+            data-display-lines="<?=$escaper->escapeHtmlAttr($displayLines)?>"
+            class="action-primary">
+        <?= $escaper->escapeHtml(__('Load Previous Logs')) ?>
+    </button>
+    <?php $message = __('Are you sure you want to delete %1 file content?', $logFile); ?>
+    <?php if ($block->isDeleteAllowed()): ?>
+        <a href="<?= $escaper->escapeHtmlAttr($block->getDeleteLogFile($logFile)) ?>" class="action-secondary delete"
+           onclick="return confirm('<?= $escaper->escapeHtmlAttr($message) ?>');">
+            <?= $escaper->escapeHtml(__('Delete File')) ?>
+        </a>
+    <?php endif; ?>
+    <a href="<?= $escaper->escapeHtmlAttr($block->getUrl('logviewer/logfile/index')) ?>" class="action-secondary back">
+        <?= $escaper->escapeHtml(__('Go Back')) ?>
+    </a>
+    <textarea id="log-output" rows="35"><?= /* @noEscape */  $block->tailFile($logPath, $displayLines) ?></textarea>
+</div>
+<script>
+    require(['jquery'], function($) {
+        $(document).ready(function () {
+            $('#load-previous').on('click', function () {
+                let $btn = $(this),
+                    file = $btn.data('file'),
+                    start = parseInt($btn.data('start')),
+                    displayLines = parseInt($btn.data('display-lines')),
+                    ajaxUrl = '<?= $escaper->escapeJs($previousLogUrl) ?>';
+
+                $.ajax({
+                    url: ajaxUrl,
+                    showLoader: true,
+                    data: {
+                        file: file,
+                        offset: start,
+                        lines: displayLines,
+                        form_key: FORM_KEY
+                    },
+                    success: function (res) {
+                        if (res.success) {
+                            if (res.data.trim()) {
+                                $('#log-output').prepend(res.data + '\n');
+                                $btn.data('start', start + displayLines);
+                            }
+
+                            if (!res.has_more) {
+                                $btn.prop('disabled', true);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+    });
+</script>

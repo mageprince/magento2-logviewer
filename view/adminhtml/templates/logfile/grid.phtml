@@ -1,0 +1,134 @@
+<?php
+/**
+ * MagePrince
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the mageprince.com license that is
+ * available through the world-wide-web at this URL:
+ * https://mageprince.com/end-user-license-agreement
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category    MagePrince
+ * @package     Mageprince_Faq
+ * @copyright   Copyright (c) MagePrince (https://mageprince.com/)
+ * @license     https://mageprince.com/end-user-license-agreement
+ */
+
+// phpcs:disable Generic.Files.LineLength.TooLong
+use Mageprince\LogViewer\Block\LogFile;
+use Magento\Framework\Escaper;
+
+/**
+ * @var LogFile $block
+ * @var Escaper $escaper
+ */
+$logs = $block->getLogFiles();
+$items = $logs['items'];
+$page = $logs['page'];
+$totalPages = $logs['totalPages'];
+$search = $logs['search'];
+?>
+<div class="admin__data-grid-wrap logviewer-grid">
+    <div class="search-filename">
+        <form method="get" action="#">
+            <input type="text" name="q"
+                   placeholder="<?= $escaper->escapeHtmlAttr('Search by file name...') ?>"
+                   value="<?= $escaper->escapeHtmlAttr($search) ?>">
+            <button type="submit"><?= $escaper->escapeHtml(__('Search')) ?></button>
+        </form>
+    </div>
+    <table class="data-grid">
+        <tr>
+            <?php
+            $sort = $logs['sort'];
+            $dir = $logs['dir'];
+            $nextDir = ($dir === 'asc') ? 'desc' : 'asc';
+            $defaultSortColumn = $block->getDefaultSortColumn();
+            ?>
+            <th class="data-grid-th">
+                <a href="<?= $escaper->escapeHtmlAttr($block->getUrl('*/*/*', [
+                    'sort' => 'name',
+                    'dir' => ($sort === 'name' && $dir === 'asc') ? 'desc' : 'asc',
+                    'q' => $search
+                ])) ?>">
+                    <?= $escaper->escapeHtml(__('File Name')) ?>
+                    <span class="sort-indicator <?= ($sort === 'name') ? ($dir === 'asc' ? 'asc' : 'desc') : '' ?>"></span>
+                </a>
+            </th>
+            <th class="data-grid-th">
+                <a href="<?= $escaper->escapeHtmlAttr($block->getUrl('*/*/*', [
+                    'sort' => 'size',
+                    'dir' => ($sort === 'size' && $dir === 'asc') ? 'desc' : 'asc',
+                    'q' => $search
+                ])) ?>">
+                    <?= $escaper->escapeHtml(__('Size')) ?>
+                    <span class="sort-indicator <?= ($sort === 'size') ? ($dir === 'asc' ? 'asc' : 'desc') : '' ?>"></span>
+                </a>
+            </th>
+            <th class="data-grid-th">
+                <a href="<?= $escaper->escapeHtmlAttr($block->getUrl('*/*/*', [
+                    'sort' => 'mod_time',
+                    'dir' => ($sort === 'mod_time' && $dir === 'asc') ? 'desc' : 'asc',
+                    'q' => $search
+                ])) ?>">
+                    <?= $escaper->escapeHtml(__('Last Updated')) ?>
+                    <span class="sort-indicator <?= ($sort === 'mod_time') ? ($dir === 'asc' ? 'asc' : 'desc') : '' ?>"></span>
+                </a>
+            </th>
+            <th class="data-grid-th"><?= $escaper->escapeHtml(__('Actions')) ?></th>
+        </tr>
+        <?php if (count($logs['items']) > 0): ?>
+            <?php $i = 0; ?>
+            <?php foreach ($logs['items'] as $log): ?>
+                <?php $fileName = $log['name'] ?>
+                <tr class="<?= $i % 2 === 0 ? '_odd-row' : '' ?>">
+                    <td><?= $escaper->escapeHtml($fileName) ?></td>
+                    <td><?= $escaper->escapeHtml($log['size_readable']) ?></td>
+                    <td>
+                        <?php $time = rtrim($log['mod_time_full'], '.') ?>
+                        <?= $escaper->escapeHtml($time) ?>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="<?= $escaper->escapeHtmlAttr($block->getViewLogFileUrl($fileName)) ?>"
+                               class="action-primary">
+                                <?= $escaper->escapeHtml(__('View')) ?>
+                            </a>
+                            <?php if ($block->isDownloadAllowed()): ?>
+                                <a href="<?= $escaper->escapeHtmlAttr($block->getDownloadLogFileUrl($fileName)) ?>"
+                                   class="action-secondary">
+                                    <?= $escaper->escapeHtml(__('Download')) ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                </tr>
+                <?php $i++; ?>
+            <?php endforeach; ?>
+            <?php $i = 0; ?>
+        <?php else: ?>
+            <tr>
+                <td colspan="4"><?= $escaper->escapeHtml(__("We couldn't find any records."))?></td>
+            </tr>
+        <?php endif; ?>
+    </table>
+    <?php if ($block->showPagination($logs)): ?>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="<?= $escaper->escapeHtmlAttr($block->getUrl('*/*/*', [
+                    'page' => $i,
+                    'q' => $search,
+                    'sort' => $sort,
+                    'dir' => $dir
+                ])) ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
+                    <?= $escaper->escapeHtml($i) ?>
+                </a>
+            <?php endfor; ?>
+        </div>
+    <?php endif; ?>
+</div>

@@ -1,0 +1,78 @@
+.logviewer-grid .action-buttons a{
+    border-radius: 4px;
+}
+.logviewer-grid .data-grid-th a{
+    color: #ffffff;
+}
+.logviewer-grid .pagination {
+    margin-top: 20px;
+}
+.logviewer-grid .pagination a {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    color: #514943;
+    text-decoration: none;
+}
+.logviewer-grid .pagination a.active {
+    background-color: #514943;
+    color: #fff;
+    border-color: #514943;
+}
+.logviewer-grid input[type="text"] {
+    padding: 5px;
+    width: 250px;
+}
+.logviewer-grid .search-filename {
+    margin-bottom: 10px;
+}
+.logviewer-grid .sort-indicator::after {
+    content: '';
+    display: inline-block;
+    margin-left: 4px;
+    border: 4px solid transparent;
+    vertical-align: middle;
+}
+
+.logviewer-grid .sort-indicator.asc::after {
+    border-bottom-color: #fff;
+}
+
+.logviewer-grid .sort-indicator.desc::after {
+    border-top-color: #fff;
+}
+.log-container {
+    position: relative;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.log-container #log-output {
+    width: 100%;
+    height: auto;
+    min-height: 600px;
+    resize: vertical;
+    background-color: #1e1e1e;
+    color: #dcdcdc;
+    line-height: 1.5;
+    border: none;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-y: auto;
+    white-space: pre;
+}
+
+.log-container a,
+.log-container button {
+    margin: 0 10px 15px 0;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.log-container a.action-secondary.delete {
+    background-color: #e53935;
+    color: #fff;
+    border: 1px solid #d32f2f;
+}
