@@ -22,7 +22,11 @@
 namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
 
 use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\View\Result\PageFactory;
+use Mageprince\LogViewer\Model\Validate;
 
 class View extends Action
 {
@@ -37,30 +41,48 @@ class View extends Action
     protected $resultPageFactory;
 
     /**
+     * @var Validate
+     */
+    protected $validate;
+
+    /**
      * View constructor.
-     * @param Action\Context $context
+     * @param Context $context
      * @param PageFactory $resultPageFactory
+     * @param Validate $validate
      */
     public function __construct(
         Action\Context $context,
-        PageFactory $resultPageFactory
+        PageFactory $resultPageFactory,
+        Validate $validate
     ) {
-        parent::__construct($context);
         $this->resultPageFactory = $resultPageFactory;
+        $this->validate = $validate;
+        parent::__construct($context);
     }
 
     /**
-     * View action
+     * View file action
      *
-     * @return \Magento\Framework\View\Result\Page
+     * @return ResponseInterface|ResultInterface
      */
     public function execute()
     {
         $resultPage = $this->resultPageFactory->create();
         $resultPage->setActiveMenu('Magento_Backend::stores');
-        $fileName = $this->getRequest()->getParam('file');
-        $resultPage->getConfig()->getTitle()->prepend(__('Log Viewer (%1)', $fileName));
-        return $resultPage;
+        try {
+            $fileName = $this->getRequest()->getParam('file');
+            $isValid = $this->validate->validateFile($fileName);
+            if (!$isValid) {
+                $this->messageManager->addErrorMessage(__('Invalid file'));
+                return $this->_redirect('logviewer/logfile/index');
+            }
+            $resultPage->getConfig()->getTitle()->prepend(__('Log Viewer (%1)', $fileName));
+            return $resultPage;
+        } catch (\Exception $e) {
+            $this->messageManager->addErrorMessage(__('File not found'));
+        }
+        $this->_redirect('logviewer/logfile/index');
     }
 
     /**
