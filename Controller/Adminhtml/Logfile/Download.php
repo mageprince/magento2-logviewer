@@ -24,6 +24,7 @@ namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
 use Magento\Backend\App\Action\Context;
 use Magento\Backend\Controller\Adminhtml\System;
 use Magento\Framework\App\Response\Http\FileFactory;
+use Mageprince\LogViewer\Model\Validate;
 
 class Download extends System
 {
@@ -46,28 +47,32 @@ class Download extends System
         Context $context,
         FileFactory $fileFactory
     ) {
-        parent::__construct($context);
         $this->fileFactory = $fileFactory;
+        parent::__construct($context);
     }
 
     /**
      * Delete action
      *
      * @return \Magento\Framework\Controller\ResultInterface
-     * @throws \Exception
      */
     public function execute()
     {
         $fileName = $this->getRequest()->getParam('file');
         $filePath = 'var/log/'. $fileName;
 
-        return $this->fileFactory->create(
-            $fileName,
-            [
-                'type'  => 'filename',
-                'value' => $filePath
-            ]
-        );
+        try {
+            return $this->fileFactory->create(
+                $fileName,
+                [
+                    'type'  => 'filename',
+                    'value' => $filePath
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->messageManager->addErrorMessage(__('File not found'));
+        }
+        return $this->_redirect('logviewer/logfile/index');
     }
 
     /**
