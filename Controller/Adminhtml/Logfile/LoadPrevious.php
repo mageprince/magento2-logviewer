@@ -25,7 +25,7 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Framework\Filesystem\Driver\File;
+use Mageprince\LogViewer\Model\FileViewer;
 
 class LoadPrevious extends Action
 {
@@ -40,23 +40,23 @@ class LoadPrevious extends Action
     protected $jsonFactory;
 
     /**
-     * @var File
+     * @var FileViewer
      */
-    protected $driver;
+    protected $fileViewer;
 
     /**
      * LoadPrevious constructor.
      * @param Context $context
      * @param JsonFactory $jsonFactory
-     * @param File $driver
+     * @param FileViewer $fileViewer
      */
     public function __construct(
         Action\Context $context,
         JsonFactory $jsonFactory,
-        File $driver,
+        FileViewer $fileViewer
     ) {
         $this->jsonFactory = $jsonFactory;
-        $this->driver = $driver;
+        $this->fileViewer = $fileViewer;
         parent::__construct($context);
     }
 
@@ -72,33 +72,14 @@ class LoadPrevious extends Action
         $file = $this->getRequest()->getParam('file');
         $offset = (int) $this->getRequest()->getParam('offset');
         $lines = (int) $this->getRequest()->getParam('lines');
-        $logPath = BP . '/var/log/' . $file;
+        $filePath = BP . '/var/log/' . $file;
 
-        $data = [];
-        $hasMore = false;
-
-        if ($this->driver->isReadable($logPath)) {
-            $file = new \SplFileObject($logPath, 'r');
-            $file->seek(PHP_INT_MAX);
-            $totalLines = $file->key();
-
-            $from = max(0, $totalLines - $offset - $lines);
-            $safeLines = min($lines, $totalLines - $from);
-
-            $file->seek($from);
-            $readLines = 0;
-
-            while (!$file->eof() && $readLines < $safeLines) {
-                $data[] = rtrim($file->fgets(), "\n");
-                $readLines++;
-            }
-
-            $hasMore = ($offset + $lines) < $totalLines;
-        }
+        $data = $this->fileViewer->tailFile($filePath, $lines, $offset);
+        $hasMore = $this->fileViewer->hasMoreDataToLoad($filePath, $data, $lines, $offset);
 
         return $result->setData([
             'success' => true,
-            'data' => implode("\n", $data),
+            'data' => $data,
             'has_more' => $hasMore
         ]);
     }

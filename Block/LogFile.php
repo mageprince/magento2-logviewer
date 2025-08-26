@@ -21,28 +21,29 @@
 
 namespace Mageprince\LogViewer\Block;
 
-use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Element\Template\Context;
+use Mageprince\LogViewer\Model\FileViewer;
 
 class LogFile extends Template
 {
     /**
-     * @var File
+     * @var FileViewer
      */
-    protected $driver;
+    protected $fileViewer;
 
     /**
      * LogFile constructor.
-     * @param Template\Context $context
-     * @param File $driver
+     * @param Context $context
+     * @param FileViewer $fileViewer
      * @param array $data
      */
     public function __construct(
         Template\Context $context,
-        File $driver,
+        FileViewer $fileViewer,
         array $data = []
     ) {
-        $this->driver = $driver;
+        $this->fileViewer = $fileViewer;
         parent::__construct($context, $data);
     }
 
@@ -189,31 +190,7 @@ class LogFile extends Template
      */
     public function tailFile($filePath, $lines)
     {
-        $output = '';
-
-        try {
-            if ($this->driver->isReadable($filePath)) {
-                $linesToRead = (int) $lines;
-                $logLines = [];
-
-                $file = new \SplFileObject($filePath, 'r');
-                $file->seek(PHP_INT_MAX);
-                $totalLines = $file->key();
-
-                $startLine = max(0, $totalLines - $linesToRead);
-                $file->seek($startLine);
-
-                while (!$file->eof() && count($logLines) < $linesToRead) {
-                    $logLines[] = rtrim($file->fgets(), "\n");
-                }
-
-                $output = implode("\n", $logLines);
-            }
-        } catch (\Exception $e) {
-            $this->_logger->error($e);
-        }
-
-        return $output;
+        return $this->fileViewer->tailFile($filePath, $lines);
     }
 
     /**
