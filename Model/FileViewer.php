@@ -2,7 +2,9 @@
 
 namespace Mageprince\LogViewer\Model;
 
+use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem\Driver\File;
+use Psr\Log\LoggerInterface;
 
 class FileViewer
 {
@@ -12,12 +14,22 @@ class FileViewer
     protected $driver;
 
     /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
+     * FileViewer constructor.
+     *
      * @param File $driver
+     * @param LoggerInterface $logger
      */
     public function __construct(
         File $driver,
+        LoggerInterface $logger
     ) {
         $this->driver = $driver;
+        $this->logger = $logger;
     }
 
     /**
@@ -33,7 +45,7 @@ class FileViewer
         $output = [];
 
         try {
-            if ($this->driver->isReadable($filePath)) {
+            if ($this->isReadable($filePath)) {
                 $fp = $this->driver->fileOpen($filePath, 'rb');
                 if ($fp === false) {
                     return '';
@@ -62,7 +74,7 @@ class FileViewer
                 $output = $slice;
             }
         } catch (\Exception $e) {
-            $this->_logger->error($e->getMessage());
+            $this->logger->error($e->getMessage());
         }
 
         return implode("\n", $output);
@@ -88,5 +100,55 @@ class FileViewer
         $estimatedTotal = (int)($fileSize / $avgLineLength);
 
         return ($offset + $lines) < $estimatedTotal;
+    }
+
+    /**
+     * Read file content from a given offset to the end
+     *
+     * @param string $filePath
+     * @param int $offset
+     * @return string
+     */
+    public function readFromOffset($filePath, $offset)
+    {
+        $content = '';
+        try {
+            if ($this->isReadable($filePath)) {
+                $fp = $this->driver->fileOpen($filePath, 'rb');
+                if ($fp === false) {
+                    return '';
+                }
+                $this->driver->fileSeek($fp, $offset);
+                $content = $this->driver->fileRead($fp, $this->getFileSize($filePath) - $offset);
+                $this->driver->fileClose($fp);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+        }
+        return $content;
+    }
+
+    /**
+     * Check is file is readable
+     *
+     * @param string $fileName
+     * @return bool
+     * @throws FileSystemException
+     */
+    public function isReadable($fileName)
+    {
+        return $this->driver->isReadable($fileName);
+    }
+
+    /**
+     * Retrieve file size
+     *
+     * @param string $filePath
+     * @return mixed
+     * @throws FileSystemException
+     */
+    public function getFileSize($filePath)
+    {
+        return $this->driver->stat($filePath)['size'];
     }
 }
