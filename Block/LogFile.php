@@ -91,6 +91,16 @@ class LogFile extends Template
     }
 
     /**
+     * Retrieve live log update url
+     *
+     * @return string
+     */
+    public function getLiveLogUrl()
+    {
+        return $this->getUrl('logviewer/logfile/liveupdate');
+    }
+
+    /**
      * Retrieve file name
      *
      * @return string

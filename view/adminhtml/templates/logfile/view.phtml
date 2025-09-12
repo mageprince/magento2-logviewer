@@ -31,7 +31,18 @@ $displayLines = $block->getLinesToShowPerPageCount();
 $logPath = BP . '/var/log/' . $logFile;
 $previousLogUrl = $block->getLoadPreviousLogUrl();
 ?>
+<div class="live-log-status" id="live-log-status" style="display: none; margin-bottom: 10px;">
+    <span class="status-indicator"></span>
+    <span class="status-text">
+        <?= $escaper->escapeHtml(__('Live Log is active.')) ?>
+    </span>
+</div>
 <div class="admin__page-section-item-content log-container">
+    <button id="toggle-live-log"
+            data-file="<?= $escaper->escapeHtmlAttr($logFile) ?>"
+            class="action-secondary live-log-btn">
+        <?= $escaper->escapeHtml(__('Start Live Log')) ?>
+    </button>
     <button id="load-previous"
             data-file="<?= $escaper->escapeHtmlAttr($logFile) ?>"
             data-start="<?= $escaper->escapeHtmlAttr($displayLines)?>"
@@ -54,6 +65,9 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
 <script>
     require(['jquery'], function($) {
         $(document).ready(function () {
+            let liveLogInterval = null;
+            let lastLogSize = $('#log-output').val().length;
+            let isLiveLogActive = false;
             $('#load-previous').on('click', function () {
                 let $btn = $(this),
                     file = $btn.data('file'),
@@ -75,6 +89,7 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
                             if (res.data.trim()) {
                                 $('#log-output').prepend(res.data + '\n');
                                 $btn.data('start', start + displayLines);
+                                lastLogSize = $('#log-output').val().length;
                             }
 
                             if (!res.has_more) {
@@ -83,6 +98,61 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
                         }
                     }
                 });
+            });
+            $('#toggle-live-log').on('click', function () {
+                let $btn = $(this);
+                if (isLiveLogActive) {
+                    stopLiveLog($btn);
+                } else {
+                    startLiveLog($btn);
+                }
+            });
+            function startLiveLog($btn) {
+                isLiveLogActive = true;
+                $btn.text('<?= $escaper->escapeJs(__('Stop Live Log')) ?>').addClass('active');
+                $('#live-log-status').show().addClass('active');
+                liveLogInterval = setInterval(function() {
+                    checkForNewLogs();
+                }, 3000);
+            }
+            function stopLiveLog($btn) {
+                isLiveLogActive = false;
+                $btn.text('<?= $escaper->escapeJs(__('Start Live Log')) ?>').removeClass('active');
+                $('#live-log-status').hide().removeClass('active');
+                if (liveLogInterval) {
+                    clearInterval(liveLogInterval);
+                    liveLogInterval = null;
+                }
+            }
+            function checkForNewLogs() {
+                let file = $('#toggle-live-log').data('file');
+                let ajaxUrl = '<?= $escaper->escapeJs($block->getLiveLogUrl()) ?>';
+                $.ajax({
+                    url: ajaxUrl,
+                    data: {
+                        file: file,
+                        last_size: lastLogSize,
+                        form_key: FORM_KEY
+                    },
+                    success: function (res) {
+                        if (res.success && res.new_content) {
+                            let $textarea = $('#log-output');
+                            let currentContent = $textarea.val();
+                            let newContent = currentContent + res.new_content;
+                            $textarea.val(newContent);
+                            lastLogSize = newContent.length;
+                            $textarea.scrollTop($textarea[0].scrollHeight);
+                        }
+                    },
+                    error: function() {
+                        stopLiveLog($('#toggle-live-log'));
+                    }
+                });
+            }
+            $(window).on('beforeunload', function() {
+                if (liveLogInterval) {
+                    clearInterval(liveLogInterval);
+                }
             });
         });
     });

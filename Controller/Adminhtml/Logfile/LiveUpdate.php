@@ -19,49 +19,35 @@
  * @license     https://mageprince.com/end-user-license-agreement
  */
 
-namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
+namespace Mageprince\LogViewer\Controller\Adminhtml\LogFile;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
-use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultFactory;
 use Mageprince\LogViewer\Model\FileViewer;
 
-class LoadPrevious extends Action
+class LiveUpdate extends Action
 {
-    /**
-     * Authorization level of a basic admin session
-     */
-    public const ADMIN_RESOURCE = 'Mageprince_LogViewer::log_viewer_view';
-
-    /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
     /**
      * @var FileViewer
      */
     protected $fileViewer;
 
     /**
-     * LoadPrevious constructor.
      * @param Context $context
-     * @param JsonFactory $jsonFactory
      * @param FileViewer $fileViewer
      */
     public function __construct(
         Action\Context $context,
-        JsonFactory $jsonFactory,
         FileViewer $fileViewer
     ) {
-        $this->jsonFactory = $jsonFactory;
         $this->fileViewer = $fileViewer;
         parent::__construct($context);
     }
 
     /**
-     * Load logs action
+     * Live file update action
      *
      * @return Json
      */
@@ -69,33 +55,33 @@ class LoadPrevious extends Action
     {
         if (!$this->getRequest()->isXmlHttpRequest()) {
             /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
-            $resultRedirect = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
+            $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
             $resultRedirect->setUrl($this->getUrl('logviewer/logfile/index'));
             return $resultRedirect;
         }
 
-        $result = $this->jsonFactory->create();
-
+        $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
         $file = $this->getRequest()->getParam('file');
-        $offset = (int) $this->getRequest()->getParam('offset');
-        $lines = (int) $this->getRequest()->getParam('lines');
-        $filePath = BP . '/var/log/' . $file;
+        $lastSize = (int)$this->getRequest()->getParam('last_size', 0);
+        $logPath = BP . '/var/log/' . $file;
 
-        $data = $this->fileViewer->tailFile($filePath, $lines, $offset);
-        $hasMore = $this->fileViewer->hasMoreDataToLoad($filePath, $data, $lines, $offset);
+        if (!$this->fileViewer->isReadable($logPath)) {
+            return $resultJson->setData([
+                'success' => false,
+                'message' => __('File not found or not readable')
+            ]);
+        }
 
-        return $result->setData([
+        $currentSize = $this->fileViewer->getFileSize($logPath);
+        $newContent = '';
+        if ($currentSize > $lastSize) {
+            $newContent = $this->fileViewer->readFromOffset($logPath, $lastSize);
+        }
+
+        return $resultJson->setData([
             'success' => true,
-            'data' => $data,
-            'has_more' => $hasMore
+            'new_content' => $newContent,
+            'current_size' => $currentSize
         ]);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function _isAllowed()
-    {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

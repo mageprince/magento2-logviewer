@@ -76,3 +76,43 @@
     color: #fff;
     border: 1px solid #d32f2f;
 }
+.live-log-status {
+    background: #e8f5e8;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    border-left: 3px solid #4caf50;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+}
+.live-log-status.active {
+    background: #e8f5e8;
+    color: #388e3c;
+    border-left: 3px solid #4caf50;
+    font-weight: 600;
+}
+.live-log-status .status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #4caf50;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: logviewer-pulse 2s infinite;
+}
+@keyframes logviewer-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+.log-container .live-log-btn.active {
+    background-color: #4caf50;
+    color: #fff;
+    border: 2px solid #388e3c;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.18);
+}
+.log-container .live-log-btn.active:hover {
+    background-color: #388e3c;
+    color: #fff;
+}
