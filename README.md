@@ -5,8 +5,6 @@ Mageprince Log Viewer is a powerful admin utility that allows you to manage, mon
 # ✅ Compatibility
 
 <b>Magento Open Source:</b> 2.3.x - 2.4.x </br>
-<b>Adobe Commerce (on-prem):</b> 2.3.x - 2.4.x </br>
-<b>Adobe Commerce (cloud)</b>: 2.3.x - 2.4.x </br>
 
 # ✨ Key Features
 
