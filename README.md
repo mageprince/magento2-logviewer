@@ -9,7 +9,9 @@ Mageprince Log Viewer is a powerful admin utility that allows you to manage, mon
 # ✨ Key Features
 
 - View Magento log files (var/log/) directly in the admin panel
+- Live log view with auto-refresh
 - Display latest log lines with “Load Previous” functionality
+- Option to toggle line wrapping for better readability
 - Search log files by filename
 - Sort logs by filename, or last updated time
 - Download or delete log files from admin
