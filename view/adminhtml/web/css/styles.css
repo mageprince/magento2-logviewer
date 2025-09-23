@@ -116,3 +116,36 @@
     background-color: #388e3c;
     color: #fff;
 }
+.log-container .log-actions .icon-live-log-play svg,
+.log-container .log-actions .icon-live-log-pause svg {
+    vertical-align: top;
+}
+
+.log-container .live-log-btn-text {
+    vertical-align: top;
+}
+.log-container .wrap-lines-btn {
+    background: #fff;
+    margin-bottom: 0 !important;
+    line-height: 10px;
+    vertical-align: top;
+}
+.log-container .wrap-lines-btn:hover,
+.log-container .wrap-lines-btn:focus {
+    background: #e0e0e0;
+    color: #222;
+    border-color: #514943;
+    box-shadow: 0 2px 8px rgba(81,73,67,0.08);
+}
+.log-container .wrap-lines-btn.active {
+    background: #4caf50;
+    color: #fff;
+    border: 1.5px solid #388e3c;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.18);
+}
+.log-container .wrap-lines-btn.active:hover,
+.log-container .wrap-lines-btn.active:focus {
+    background: #388e3c;
+    color: #fff;
+    border-color: #388e3c;
+}

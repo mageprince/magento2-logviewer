@@ -20,11 +20,9 @@
  */
 
 use Mageprince\LogViewer\Block\LogFile;
-use Magento\Framework\Escaper;
 
 /**
  * @var LogFile $block
- * @var Escaper $escaper
  */
 $logFile = $block->getFileName();
 $displayLines = $block->getLinesToShowPerPageCount();
@@ -34,33 +32,57 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
 <div class="live-log-status" id="live-log-status" style="display: none; margin-bottom: 10px;">
     <span class="status-indicator"></span>
     <span class="status-text">
-        <?= $escaper->escapeHtml(__('Live Log is active.')) ?>
+        <?= $block->escapeHtml(__('Live Log is active.')) ?>
     </span>
 </div>
 <div class="admin__page-section-item-content log-container">
-    <button id="toggle-live-log"
-            data-file="<?= $escaper->escapeHtmlAttr($logFile) ?>"
-            class="action-secondary live-log-btn">
-        <?= $escaper->escapeHtml(__('Start Live Log')) ?>
-    </button>
-    <button id="load-previous"
-            data-file="<?= $escaper->escapeHtmlAttr($logFile) ?>"
-            data-start="<?= $escaper->escapeHtmlAttr($displayLines)?>"
-            data-display-lines="<?=$escaper->escapeHtmlAttr($displayLines)?>"
-            class="action-primary">
-        <?= $escaper->escapeHtml(__('Load Previous Logs')) ?>
-    </button>
-    <?php $message = __('Are you sure you want to delete %1 file content?', $logFile); ?>
-    <?php if ($block->isDeleteAllowed()): ?>
-        <a href="<?= $escaper->escapeHtmlAttr($block->getDeleteLogFile($logFile)) ?>" class="action-secondary delete"
-           onclick="return confirm('<?= $escaper->escapeHtmlAttr($message) ?>');">
-            <?= $escaper->escapeHtml(__('Delete File')) ?>
+    <div class="log-actions" style="display:inline-block;">
+        <button id="toggle-live-log"
+                data-file="<?= $block->escapeHtmlAttr($logFile) ?>"
+                class="action-secondary live-log-btn"
+                aria-label="<?= $block->escapeHtml(__('Start Live Log')) ?>"
+                title="<?= $block->escapeHtml(__('Start Live Log')) ?>">
+            <span class="icon-live-log-play">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><polygon points="5 3 19 12 5 21 5 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="icon-live-log-pause" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="6" y="4" width="4" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/><rect x="14" y="4" width="4" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            </span>
+            <span class="live-log-btn-text"><?= $block->escapeHtml(__('Start Live Log')) ?></span>
+        </button>
+        <button id="load-previous"
+                data-file="<?= $block->escapeHtmlAttr($logFile) ?>"
+                data-start="<?= $block->escapeHtmlAttr($displayLines)?>"
+                data-display-lines="<?=$block->escapeHtmlAttr($displayLines)?>"
+                class="action-primary"
+                aria-label="<?= $block->escapeHtml(__('Load Previous Logs')) ?>"
+                title="<?= $block->escapeHtml(__('Load Previous Logs')) ?>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align:top;margin-right:4px;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><polyline points="14 8 10 12 14 16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><polyline points="12 8 8 12 12 16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <?= $block->escapeHtml(__('Load Previous Logs')) ?>
+        </button>
+        <a href="<?= $block->escapeHtmlAttr($block->getUrl('logviewer/logfile/index')) ?>" class="action-secondary back">
+            <?= $block->escapeHtml(__('Go Back')) ?>
         </a>
-    <?php endif; ?>
-    <a href="<?= $escaper->escapeHtmlAttr($block->getUrl('logviewer/logfile/index')) ?>" class="action-secondary back">
-        <?= $escaper->escapeHtml(__('Go Back')) ?>
-    </a>
-    <textarea id="log-output" rows="35"><?= /* @noEscape */  $block->tailFile($logPath, $displayLines) ?></textarea>
+    </div>
+    <div class="log-actions-right" style="float:right;display:inline-block;">
+        <button id="toggle-wrap-lines" type="button"
+                class="icon-btn wrap-lines-btn"
+                aria-label="<?= $block->escapeHtml(__('Wrap Lines')) ?>"
+                title="<?= $block->escapeHtml(__('Wrap Lines')) ?>" style="margin-left: 5px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><path d="M16 16l-2 2 2 2"/></svg>
+        </button>
+        <?php $message = __('Are you sure you want to delete %1 file content?', $logFile); ?>
+        <?php if ($block->isDeleteAllowed()): ?>
+            <a href="<?= $block->escapeHtmlAttr($block->getDeleteLogFile($logFile)) ?>"
+               class="action-secondary delete"
+               title="<?= $block->escapeHtml(__('Truncate File')) ?>"
+               aria-label="<?= $block->escapeHtml(__('Truncate File')) ?>"
+               onclick="return confirm('<?= $block->escapeHtmlAttr($message) ?>');">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </a>
+        <?php endif; ?>
+    </div>
+    <textarea id="log-output" rows="35" style="white-space:pre; width:100%;"><?= /* @noEscape */  $block->tailFile($logPath, $displayLines) ?></textarea>
 </div>
 <script>
     require(['jquery'], function($) {
@@ -68,12 +90,13 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
             let liveLogInterval = null;
             let lastLogSize = $('#log-output').val().length;
             let isLiveLogActive = false;
+            let isWrapLines = false;
             $('#load-previous').on('click', function () {
                 let $btn = $(this),
                     file = $btn.data('file'),
                     start = parseInt($btn.data('start')),
                     displayLines = parseInt($btn.data('display-lines')),
-                    ajaxUrl = '<?= $escaper->escapeJs($previousLogUrl) ?>';
+                    ajaxUrl = '<?= $block->escapeJs($previousLogUrl) ?>';
 
                 $.ajax({
                     url: ajaxUrl,
@@ -107,9 +130,25 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
                     startLiveLog($btn);
                 }
             });
+            $('#toggle-wrap-lines').on('click', function () {
+                isWrapLines = !isWrapLines;
+                const $textarea = $('#log-output');
+                if (isWrapLines) {
+                    $textarea.css('white-space', 'pre-wrap');
+                    $(this).attr('title', 'Unwrap Lines').attr('aria-label', 'Unwrap Lines');
+                    $(this).addClass('active');
+                } else {
+                    $textarea.css('white-space', 'pre');
+                    $(this).attr('title', 'Wrap Lines').attr('aria-label', 'Wrap Lines');
+                    $(this).removeClass('active');
+                }
+            });
             function startLiveLog($btn) {
                 isLiveLogActive = true;
-                $btn.text('<?= $escaper->escapeJs(__('Stop Live Log')) ?>').addClass('active');
+                $btn.find('.icon-live-log-play').hide();
+                $btn.find('.icon-live-log-pause').show();
+                $btn.find('.live-log-btn-text').text('<?= $block->escapeJs(__('Stop Live Log')) ?>');
+                $btn.addClass('active');
                 $('#live-log-status').show().addClass('active');
                 liveLogInterval = setInterval(function() {
                     checkForNewLogs();
@@ -117,7 +156,10 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
             }
             function stopLiveLog($btn) {
                 isLiveLogActive = false;
-                $btn.text('<?= $escaper->escapeJs(__('Start Live Log')) ?>').removeClass('active');
+                $btn.find('.icon-live-log-play').show();
+                $btn.find('.icon-live-log-pause').hide();
+                $btn.find('.live-log-btn-text').text('<?= $block->escapeJs(__('Start Live Log')) ?>');
+                $btn.removeClass('active');
                 $('#live-log-status').hide().removeClass('active');
                 if (liveLogInterval) {
                     clearInterval(liveLogInterval);
@@ -126,7 +168,7 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
             }
             function checkForNewLogs() {
                 let file = $('#toggle-live-log').data('file');
-                let ajaxUrl = '<?= $escaper->escapeJs($block->getLiveLogUrl()) ?>';
+                let ajaxUrl = '<?= $block->escapeJs($block->getLiveLogUrl()) ?>';
                 $.ajax({
                     url: ajaxUrl,
                     data: {
