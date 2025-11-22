@@ -14,7 +14,7 @@
  * version in the future.
  *
  * @category    MagePrince
- * @package     Mageprince_Faq
+ * @package     Mageprince_LogViewer
  * @copyright   Copyright (c) MagePrince (https://mageprince.com/)
  * @license     https://mageprince.com/end-user-license-agreement
  */
