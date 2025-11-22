@@ -144,13 +144,18 @@ class LogFile extends Template
 
         $path = BP . '/var/log/';
         $files = [];
-        $dir = new \DirectoryIterator($path);
-
         $allowedFileExtensions = $this->getAllowedFileExtensions();
-        foreach ($dir as $fileInfo) {
-            if (!$fileInfo->isDot()) {
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $fileInfo) {
+            if ($fileInfo->isFile()) {
+                $filePath = $fileInfo->getPathname();
+                $relativePath = ltrim(str_replace($path, '', $filePath), '/');
                 $fileName = $fileInfo->getFilename();
-                if ($search && stripos($fileName, $search) === false) {
+
+                if ($search && stripos($relativePath, $search) === false) {
                     continue;
                 }
 
@@ -162,7 +167,7 @@ class LogFile extends Template
                 }
 
                 $files[] = [
-                    'name' => $fileInfo->getFilename(),
+                    'name' => $relativePath,
                     'size' => $fileInfo->getSize(),
                     'size_readable' => $this->filesizeToReadableString($fileInfo->getSize()),
                     'mod_time' => $fileInfo->getMTime(),
