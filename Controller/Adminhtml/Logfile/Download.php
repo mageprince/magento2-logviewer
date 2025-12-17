@@ -39,15 +39,23 @@ class Download extends System
     protected $fileFactory;
 
     /**
+     * @var Validate
+     */
+    protected $validate;
+
+    /**
      * Download constructor.
      * @param Context $context
      * @param FileFactory $fileFactory
+     * @param Validate $validate
      */
     public function __construct(
         Context $context,
-        FileFactory $fileFactory
+        FileFactory $fileFactory,
+        Validate $validate
     ) {
         $this->fileFactory = $fileFactory;
+        $this->validate = $validate;
         parent::__construct($context);
     }
 
@@ -58,10 +66,15 @@ class Download extends System
      */
     public function execute()
     {
-        $fileName = $this->getRequest()->getParam('file');
-        $filePath = 'var/log/'. $fileName;
-
         try {
+            $fileName = $this->getRequest()->getParam('file');
+            $isValid = $this->validate->validateFile($fileName);
+            if (!$isValid) {
+                $this->messageManager->addErrorMessage(__('Invalid file'));
+                return $this->_redirect('logviewer/logfile/index');
+            }
+
+            $filePath = 'var/log/'. $fileName;
             return $this->fileFactory->create(
                 $fileName,
                 [

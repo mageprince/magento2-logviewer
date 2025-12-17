@@ -27,6 +27,7 @@ use Magento\Backend\App\Action\Context;
 use Magento\Backend\Controller\Adminhtml\System;
 use Magento\Framework\App\Response\Http\FileFactory;
 use Magento\Framework\Filesystem\Driver\File;
+use Mageprince\LogViewer\Model\Validate;
 
 class Delete extends System
 {
@@ -51,21 +52,29 @@ class Delete extends System
     protected $driver;
 
     /**
+     * @var Validate
+     */
+    protected $validate;
+
+    /**
      * Delete constructor.
      * @param Context $context
      * @param FileFactory $fileFactory
      * @param LogFile $logFile
      * @param File $driver
+     * @param Validate $validate
      */
     public function __construct(
         Context $context,
         FileFactory $fileFactory,
         LogFile $logFile,
-        File $driver
+        File $driver,
+        Validate $validate
     ) {
         $this->fileFactory = $fileFactory;
         $this->logFile = $logFile;
         $this->driver = $driver;
+        $this->validate = $validate;
         parent::__construct($context);
     }
 
@@ -76,13 +85,24 @@ class Delete extends System
      */
     public function execute()
     {
-        $fileName = $this->getRequest()->getParam('file');
-        $file = BP . '/var/log/' . $fileName;
-        $fp = $this->driver->fileOpen($file, "r+");
-        ftruncate($fp, 0);
-        $this->driver->fileClose($fp);
-        $this->messageManager->addSuccessMessage(__("File content of %1 has been deleted", $fileName));
-        $this->_redirect('logviewer/logfile/view', ['file' => $fileName]);
+        try {
+            $fileName = $this->getRequest()->getParam('file');
+            $isValid = $this->validate->validateFile($fileName);
+            if (!$isValid) {
+                $this->messageManager->addErrorMessage(__('Invalid file'));
+                return $this->_redirect('logviewer/logfile/index');
+            }
+
+            $file = BP . '/var/log/' . $fileName;
+            $fp = $this->driver->fileOpen($file, "r+");
+            ftruncate($fp, 0);
+            $this->driver->fileClose($fp);
+            $this->messageManager->addSuccessMessage(__('File content of %1 has been deleted', $fileName));
+            return $this->_redirect('logviewer/logfile/view', ['file' => $fileName]);
+        } catch (\Exception $e) {
+            $this->messageManager->addErrorMessage(__('File not found'));
+        }
+        return $this->_redirect('logviewer/logfile/index');
     }
 
     /**
