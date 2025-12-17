@@ -43,7 +43,7 @@ class Validate
         $logDir = $this->fileDriver->getRealPath(BP . '/var/log') . DIRECTORY_SEPARATOR;
         $realPath = $this->fileDriver->getRealPath($logDir . $fileName);
 
-        if (strpos($realPath, $logDir) !== 0) {
+        if ($realPath === false || strpos($realPath, $logDir) !== 0) {
             return false;
         }
 
@@ -51,10 +51,10 @@ class Validate
             return false;
         }
 
-        $deniedExtensions = ['php', 'phtml', 'phar', 'exe', 'sh', 'bin', 'so', 'dll', 'pl', 'py', 'cgi'];
+        $allowedExtensions = ['log', 'zip', 'tar', 'gz'];
         $pathInfo = $this->file->getPathInfo($realPath);
-        $extension = strtolower($pathInfo['extension']);
-        if (in_array($extension, $deniedExtensions, true)) {
+        $extension = strtolower($pathInfo['extension'] ?? '');
+        if (!in_array($extension, $allowedExtensions, true)) {
             return false;
         }
 
