@@ -29,6 +29,8 @@ $logFile = $block->getFileName();
 $displayLines = $block->getLinesToShowPerPageCount();
 $logPath = BP . '/var/log/' . $logFile;
 $previousLogUrl = $block->getLoadPreviousLogUrl();
+$isCompressedLog = strtolower(substr((string)$logFile, -3)) === '.gz';
+$liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live Log');
 ?>
 <div class="live-log-status" id="live-log-status" style="display: none; margin-bottom: 10px;">
     <span class="status-indicator"></span>
@@ -41,15 +43,16 @@ $previousLogUrl = $block->getLoadPreviousLogUrl();
         <button id="toggle-live-log"
                 data-file="<?= $block->escapeHtmlAttr($logFile) ?>"
                 class="action-secondary live-log-btn"
-                aria-label="<?= $block->escapeHtml(__('Start Live Log')) ?>"
-                title="<?= $block->escapeHtml(__('Start Live Log')) ?>">
+                aria-label="<?= $block->escapeHtml($liveLogLabel) ?>"
+                title="<?= $block->escapeHtml($liveLogLabel) ?>"
+                <?= $isCompressedLog ? 'disabled="disabled"' : '' ?>>
             <span class="icon-live-log-play">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><polygon points="5 3 19 12 5 21 5 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
             <span class="icon-live-log-pause" style="display:none;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="6" y="4" width="4" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/><rect x="14" y="4" width="4" height="16" rx="1" stroke="currentColor" stroke-width="2" fill="none"/></svg>
             </span>
-            <span class="live-log-btn-text"><?= $block->escapeHtml(__('Start Live Log')) ?></span>
+            <span class="live-log-btn-text"><?= $block->escapeHtml($liveLogLabel) ?></span>
         </button>
         <button id="load-previous"
                 data-file="<?= $block->escapeHtmlAttr($logFile) ?>"

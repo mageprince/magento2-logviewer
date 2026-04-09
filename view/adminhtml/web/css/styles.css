@@ -1,7 +1,34 @@
-.logviewer-grid .action-buttons a{
-    border-radius: 4px;
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th,
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th._sortable,
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th._sortable._ascend,
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th._sortable._descend {
+    background: #000 !important;
+    background-color: #000 !important;
+    background-image: none !important;
+    border-color: #000 !important;
 }
-.logviewer-grid .data-grid-th a{
+
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th,
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th .data-grid-cell-content,
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th a,
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th span {
+    color: #fff !important;
+}
+
+.admin__data-grid-wrap .action-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin__data-grid-wrap .action-buttons a{
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 0;
+    text-decoration: none;
+}
+.admin__data-grid-wrap table.data-grid thead th.data-grid-th a{
     color: #ffffff;
 }
 .logviewer-grid .pagination {
