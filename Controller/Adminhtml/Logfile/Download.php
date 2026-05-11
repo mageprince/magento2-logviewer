@@ -70,7 +70,9 @@ class Download extends System
             $fileName = $this->getRequest()->getParam('file');
             $isValid = $this->validate->validateFile($fileName);
             if (!$isValid) {
-                $this->messageManager->addErrorMessage(__('Invalid file'));
+                $this->messageManager->addErrorMessage(
+                    __('Invalid file. I can only view %1 files.', $this->validate->getAllowedExtensionsMessage())
+                );
                 return $this->_redirect('logviewer/logfile/index');
             }
 

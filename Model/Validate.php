@@ -8,6 +8,8 @@ use Magento\Framework\Filesystem\Io\File;
 
 class Validate
 {
+    private const ALLOWED_EXTENSIONS = ['log', 'zip', 'tar', 'gz'];
+
     /**
      * @var File
      */
@@ -51,13 +53,26 @@ class Validate
             return false;
         }
 
-        $allowedExtensions = ['log', 'zip', 'tar', 'gz'];
         $pathInfo = $this->file->getPathInfo($realPath);
         $extension = strtolower($pathInfo['extension'] ?? '');
-        if (!in_array($extension, $allowedExtensions, true)) {
+        if (!in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Retrieve allowed extensions formatted for display.
+     *
+     * @return string
+     */
+    public function getAllowedExtensionsMessage()
+    {
+        $extensions = array_map(function ($extension) {
+            return "'" . $extension . "'";
+        }, self::ALLOWED_EXTENSIONS);
+
+        return implode(', ', $extensions);
     }
 }

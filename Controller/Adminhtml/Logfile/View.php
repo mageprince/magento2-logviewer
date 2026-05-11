@@ -74,7 +74,9 @@ class View extends Action
             $fileName = $this->getRequest()->getParam('file');
             $isValid = $this->validate->validateFile($fileName);
             if (!$isValid) {
-                $this->messageManager->addErrorMessage(__('Invalid file'));
+                $this->messageManager->addErrorMessage(
+                    __('Invalid file. I can only view %1 files.', $this->validate->getAllowedExtensionsMessage())
+                );
                 return $this->_redirect('logviewer/logfile/index');
             }
             $resultPage->getConfig()->getTitle()->prepend(__('Log Viewer (%1)', $fileName));

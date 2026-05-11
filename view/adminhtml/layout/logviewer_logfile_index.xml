@@ -26,7 +26,7 @@
     </head>
     <body>
         <referenceContainer name="content">
-            <block class="Mageprince\LogViewer\Block\LogFile" name="mageprince.logviewer.grid" template="Mageprince_LogViewer::logfile/grid.phtml"/>
+            <uiComponent name="logviewer_logfile_listing"/>
         </referenceContainer>
     </body>
 </page>

@@ -8,6 +8,8 @@ use Psr\Log\LoggerInterface;
 
 class FileViewer
 {
+    private const GZIP_EXTENSION = '.gz';
+
     /**
      * @var File
      */
@@ -46,6 +48,19 @@ class FileViewer
 
         try {
             if ($this->isReadable($filePath)) {
+                if ($this->isGzipFile($filePath)) {
+                    $content = $this->readFileContent($filePath);
+                    if ($content === '') {
+                        return '';
+                    }
+
+                    $linesArray = preg_split("/\r\n|\n|\r/", $content);
+                    $needed = max(0, $offset + $lines);
+                    $slice = array_slice($linesArray, -$needed, $lines);
+
+                    return implode("\n", $slice);
+                }
+
                 $fp = $this->driver->fileOpen($filePath, 'rb');
                 if ($fp === false) {
                     return '';
@@ -91,6 +106,18 @@ class FileViewer
      */
     public function hasMoreDataToLoad($filePath, $data, $lines, $offset)
     {
+        if ($this->isGzipFile($filePath)) {
+            $content = $this->readFileContent($filePath);
+            if ($content === '') {
+                return false;
+            }
+
+            $linesArray = preg_split("/\r\n|\n|\r/", $content);
+            $totalLines = count($linesArray);
+
+            return ($offset + $lines) < $totalLines;
+        }
+
         $file = $this->driver->fileOpen($filePath, 'rb');
         $this->driver->fileSeek($file, 0, SEEK_END);
         $fileSize = $this->driver->fileTell($file);
@@ -114,6 +141,11 @@ class FileViewer
         $content = '';
         try {
             if ($this->isReadable($filePath)) {
+                if ($this->isGzipFile($filePath)) {
+                    $content = substr($this->readFileContent($filePath), $offset);
+                    return $content === false ? '' : $content;
+                }
+
                 $fp = $this->driver->fileOpen($filePath, 'rb');
                 if ($fp === false) {
                     return '';
@@ -149,6 +181,63 @@ class FileViewer
      */
     public function getFileSize($filePath)
     {
+        if ($this->isGzipFile($filePath)) {
+            return strlen($this->readFileContent($filePath));
+        }
+
         return $this->driver->stat($filePath)['size'];
+    }
+
+    /**
+     * Check if file is gzip-compressed.
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    private function isGzipFile($filePath)
+    {
+        return strtolower(substr($filePath, -strlen(self::GZIP_EXTENSION))) === self::GZIP_EXTENSION;
+    }
+
+    /**
+     * Read file content, decompressing gzip files into plain text.
+     *
+     * @param string $filePath
+     * @return string
+     */
+    private function readFileContent($filePath)
+    {
+        if (!$this->isGzipFile($filePath)) {
+            return (string)$this->driver->fileGetContents($filePath);
+        }
+
+        if (!function_exists('gzopen')) {
+            return '';
+        }
+
+        $handle = @gzopen($filePath, 'rb');
+        if ($handle === false) {
+            return '';
+        }
+
+        $content = '';
+
+        try {
+            while (!gzeof($handle)) {
+                $chunk = gzread($handle, 8192);
+                if ($chunk === false) {
+                    break;
+                }
+
+                $content .= $chunk;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            $content = '';
+        } finally {
+            gzclose($handle);
+        }
+
+        return $content;
     }
 }

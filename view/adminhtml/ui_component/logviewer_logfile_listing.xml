@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * MagePrince
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the mageprince.com license that is
+ * available through the world-wide-web at this URL:
+ * https://mageprince.com/end-user-license-agreement
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category    MagePrince
+ * @package     Mageprince_LogViewer
+ * @copyright   Copyright (c) MagePrince (https://mageprince.com/)
+ * @license     https://mageprince.com/end-user-license-agreement
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">logviewer_logfile_listing.logviewer_logfile_listing_data_source</item>
+        </item>
+    </argument>
+    <settings>
+        <spinner>logviewer_logfile_columns</spinner>
+        <deps>
+            <dep>logviewer_logfile_listing.logviewer_logfile_listing_data_source</dep>
+        </deps>
+    </settings>
+    <dataSource name="logviewer_logfile_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">entity_id</param>
+                <param name="cacheRequests" xsi:type="boolean">false</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>Mageprince_LogViewer::log_viewer_view</aclResource>
+        <dataProvider class="Mageprince\LogViewer\Ui\DataProvider\LogFile\ListingDataProvider"
+                      name="logviewer_logfile_listing_data_source">
+            <settings>
+                <requestFieldName>file</requestFieldName>
+                <primaryFieldName>entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+    <listingToolbar name="listing_top">
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filterSearch name="fulltext"/>
+        <filters name="listing_filters"/>
+        <paging name="listing_paging" class="Mageprince\LogViewer\Ui\Component\Listing\Paging"/>
+    </listingToolbar>
+    <columns name="logviewer_logfile_columns">
+        <column name="name" sortOrder="10">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">File Name</label>
+            </settings>
+        </column>
+        <column name="size" sortOrder="20">
+            <settings>
+                <filter>textRange</filter>
+                <dataType>number</dataType>
+                <label translate="true">Size</label>
+            </settings>
+        </column>
+        <column name="mod_time" sortOrder="30">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Last Updated</label>
+                <sorting>desc</sorting>
+            </settings>
+        </column>
+        <column name="actions"
+                class="Mageprince\LogViewer\Ui\Component\Listing\Column\Actions"
+                sortOrder="40">
+            <settings>
+                <bodyTmpl>ui/grid/cells/html</bodyTmpl>
+                <filter>false</filter>
+                <sortable>false</sortable>
+                <resizeEnabled>false</resizeEnabled>
+                <resizeDefaultWidth>180</resizeDefaultWidth>
+                <label translate="true">Actions</label>
+            </settings>
+        </column>
+    </columns>
+</listing>
