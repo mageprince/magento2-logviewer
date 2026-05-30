@@ -215,7 +215,8 @@ class FileViewer
             return '';
         }
 
-        $handle = @gzopen($filePath, 'rb');
+        // phpcs:ignore Magento2.Functions.DiscouragedFunction
+        $handle = gzopen($filePath, 'rb');
         if ($handle === false) {
             return '';
         }
@@ -223,7 +224,9 @@ class FileViewer
         $content = '';
 
         try {
+            // phpcs:ignore Magento2.Functions.DiscouragedFunction
             while (!gzeof($handle)) {
+                // phpcs:ignore Magento2.Functions.DiscouragedFunction
                 $chunk = gzread($handle, 8192);
                 if ($chunk === false) {
                     break;
@@ -235,7 +238,7 @@ class FileViewer
             $this->logger->error($e->getMessage());
             $content = '';
         } finally {
-            gzclose($handle);
+            gzclose($handle); // phpcs:ignore Magento2.Functions.DiscouragedFunction
         }
 
         return $content;

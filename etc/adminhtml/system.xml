@@ -65,14 +65,7 @@
                         <field id="enable">1</field>
                     </depends>
                 </field>
-                <field id="allowed_extensions" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Allowed File Extensions</label>
-                    <comment>Comma-separated (e.g. .log,.txt). Leave it blank to allow all files</comment>
-                    <depends>
-                        <field id="enable">1</field>
-                    </depends>
-                </field>
-                <field id="allow_delete" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="allow_delete" translate="label" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Allow Delete</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>Allow file cleanup on log view page</comment>
@@ -80,7 +73,7 @@
                         <field id="enable">1</field>
                     </depends>
                 </field>
-                <field id="allow_download" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="allow_download" translate="label" type="select" sortOrder="70" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Allow Download</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <depends>
