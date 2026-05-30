@@ -24,11 +24,12 @@ namespace Mageprince\LogViewer\Ui\DataProvider\LogFile;
 use Magento\Framework\Api\Filter;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\Filesystem\Driver\File;
 use Magento\Ui\DataProvider\AbstractDataProvider;
+use Mageprince\LogViewer\Model\Validate;
 
 class ListingDataProvider extends AbstractDataProvider
 {
-    private const XML_PATH_ALLOWED_EXTENSIONS = 'log_viewer/general/allowed_extensions';
     private const XML_PATH_DEFAULT_SORT_COLUMN = 'log_viewer/general/default_sort_column';
     private const XML_PATH_DEFAULT_SORT_DIR = 'log_viewer/general/default_sort_dir';
     private const XML_PATH_ITEMS_PER_PAGE = 'log_viewer/general/items_per_page';
@@ -37,6 +38,11 @@ class ListingDataProvider extends AbstractDataProvider
      * @var ScopeConfigInterface
      */
     private $scopeConfig;
+
+    /**
+     * @var File
+     */
+    private $driver;
 
     /**
      * @var string
@@ -69,6 +75,7 @@ class ListingDataProvider extends AbstractDataProvider
      * @param string $requestFieldName
      * @param ScopeConfigInterface $scopeConfig
      * @param DirectoryList $directoryList
+     * @param File $driver
      * @param array $meta
      * @param array $data
      */
@@ -78,10 +85,12 @@ class ListingDataProvider extends AbstractDataProvider
         $requestFieldName,
         ScopeConfigInterface $scopeConfig,
         DirectoryList $directoryList,
+        File $driver,
         array $meta = [],
         array $data = []
     ) {
         $this->scopeConfig = $scopeConfig;
+        $this->driver = $driver;
         $this->logDirectory = rtrim($directoryList->getPath(DirectoryList::LOG), DIRECTORY_SEPARATOR)
             . DIRECTORY_SEPARATOR;
         $this->pageSize = $this->getConfiguredItemsPerPage();
@@ -175,12 +184,11 @@ class ListingDataProvider extends AbstractDataProvider
      */
     private function getLogFiles()
     {
-        if (!is_dir($this->logDirectory)) {
+        if (!$this->driver->isDirectory($this->logDirectory)) {
             return [];
         }
 
         $files = [];
-        $allowedExtensions = $this->getAllowedFileExtensions();
 
         try {
             $iterator = new \RecursiveIteratorIterator(
@@ -198,12 +206,12 @@ class ListingDataProvider extends AbstractDataProvider
             $relativePath = str_replace($this->logDirectory, '', $fileInfo->getPathname());
             $relativePath = ltrim(str_replace(DIRECTORY_SEPARATOR, '/', $relativePath), '/');
 
-            if (!$this->isAllowedExtension($fileInfo->getFilename(), $allowedExtensions)) {
+            if (!$this->isAllowedExtension($fileInfo->getFilename())) {
                 continue;
             }
 
             $files[] = [
-                'entity_id' => md5($relativePath),
+                'entity_id' => hash('sha256', $relativePath),
                 'name' => $relativePath,
                 'size' => (int)$fileInfo->getSize(),
                 'mod_time' => (int)$fileInfo->getMTime(),
@@ -431,45 +439,20 @@ class ListingDataProvider extends AbstractDataProvider
     }
 
     /**
-     * Retrieve configured allowed extensions.
+     * Check whether a filename has an allowed extension.
      *
-     * @return string[]
-     */
-    private function getAllowedFileExtensions()
-    {
-        $configuredExtensions = (string)$this->scopeConfig->getValue(self::XML_PATH_ALLOWED_EXTENSIONS);
-
-        if ($configuredExtensions === '') {
-            return [];
-        }
-
-        $extensions = array_map('trim', explode(',', $configuredExtensions));
-        $extensions = array_filter($extensions, function ($extension) {
-            return $extension !== '';
-        });
-
-        return array_map(function ($extension) {
-            $extension = strtolower($extension);
-            return strpos($extension, '.') === 0 ? $extension : '.' . $extension;
-        }, $extensions);
-    }
-
-    /**
-     * Check whether a filename matches the configured extension allow-list.
+     * Allowed extensions are hardcoded to prevent admins from exposing
+     * sensitive files outside var/log/.
      *
      * @param string $fileName
-     * @param string[] $allowedExtensions
      * @return bool
      */
-    private function isAllowedExtension($fileName, array $allowedExtensions)
+    private function isAllowedExtension($fileName)
     {
-        if (!$allowedExtensions) {
-            return true;
-        }
+        $dotExtension = strrchr($fileName, '.');
+        $extension    = $dotExtension !== false ? strtolower(ltrim($dotExtension, '.')) : '';
 
-        $extension = strtolower((string)strrchr($fileName, '.'));
-
-        return in_array($extension, $allowedExtensions, true);
+        return in_array($extension, Validate::ALLOWED_EXTENSIONS, true);
     }
 
     /**

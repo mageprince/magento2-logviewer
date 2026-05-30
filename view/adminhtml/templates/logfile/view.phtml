@@ -29,6 +29,7 @@ $logFile = $block->getFileName();
 $displayLines = $block->getLinesToShowPerPageCount();
 $logPath = BP . '/var/log/' . $logFile;
 $previousLogUrl = $block->getLoadPreviousLogUrl();
+$searchUrl = $block->getSearchUrl();
 $isCompressedLog = strtolower(substr((string)$logFile, -3)) === '.gz';
 $liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live Log');
 ?>
@@ -69,10 +70,33 @@ $liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live L
         </a>
     </div>
     <div class="log-actions-right" style="float:right;display:inline-block;">
+        <span id="log-search-inline" style="display:none;">
+            <input type="text"
+                   id="log-search-input"
+                   placeholder="<?= $block->escapeHtmlAttr(__('Search full log…')) ?>"
+                   autocomplete="off">
+            <button id="log-search-btn" type="button" class="action-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <?= $block->escapeHtml(__('Search')) ?>
+            </button>
+            <span id="log-search-info"></span>
+        </span>
+        <button id="log-search-toggle" type="button"
+                class="icon-btn search-btn"
+                aria-label="<?= $block->escapeHtml(__('Search')) ?>"
+                title="<?= $block->escapeHtml(__('Search')) ?>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <button id="clear-log-view" type="button"
+                class="icon-btn clear-log-btn"
+                aria-label="<?= $block->escapeHtml(__('Clear Log')) ?>"
+                title="<?= $block->escapeHtml(__('Clear Log')) ?>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+        </button>
         <button id="toggle-wrap-lines" type="button"
                 class="icon-btn wrap-lines-btn"
                 aria-label="<?= $block->escapeHtml(__('Wrap Lines')) ?>"
-                title="<?= $block->escapeHtml(__('Wrap Lines')) ?>" style="margin-left: 5px;">
+                title="<?= $block->escapeHtml(__('Wrap Lines')) ?>">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><path d="M16 16l-2 2 2 2"/></svg>
         </button>
         <?php $message = __('Are you sure you want to delete %1 file content?', $logFile); ?>
@@ -86,120 +110,18 @@ $liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live L
             </a>
         <?php endif; ?>
     </div>
-    <textarea id="log-output" rows="35" style="white-space:pre; width:100%;"><?= /* @noEscape */  $block->tailFile($logPath, $displayLines) ?></textarea>
+    <textarea id="log-output" rows="35" style="white-space:pre; width:100%; clear:both;"><?= /* @noEscape */  $block->tailFile($logPath, $displayLines) ?></textarea>
 </div>
-<script>
-    require(['jquery'], function($) {
-        $(document).ready(function () {
-            let liveLogInterval = null;
-            let lastLogSize = $('#log-output').val().length;
-            let isLiveLogActive = false;
-            let isWrapLines = false;
-            $('#load-previous').on('click', function () {
-                let $btn = $(this),
-                    file = $btn.data('file'),
-                    start = parseInt($btn.data('start')),
-                    displayLines = parseInt($btn.data('display-lines')),
-                    ajaxUrl = '<?= $block->escapeJs($previousLogUrl) ?>';
-
-                $.ajax({
-                    url: ajaxUrl,
-                    showLoader: true,
-                    data: {
-                        file: file,
-                        offset: start,
-                        lines: displayLines,
-                        form_key: FORM_KEY
-                    },
-                    success: function (res) {
-                        if (res.success) {
-                            if (res.data.trim()) {
-                                $('#log-output').prepend(res.data + '\n');
-                                $btn.data('start', start + displayLines);
-                                lastLogSize = $('#log-output').val().length;
-                            }
-
-                            if (!res.has_more) {
-                                $btn.prop('disabled', true);
-                            }
-                        }
-                    }
-                });
-            });
-            $('#toggle-live-log').on('click', function () {
-                let $btn = $(this);
-                if (isLiveLogActive) {
-                    stopLiveLog($btn);
-                } else {
-                    startLiveLog($btn);
-                }
-            });
-            $('#toggle-wrap-lines').on('click', function () {
-                isWrapLines = !isWrapLines;
-                const $textarea = $('#log-output');
-                if (isWrapLines) {
-                    $textarea.css('white-space', 'pre-wrap');
-                    $(this).attr('title', 'Unwrap Lines').attr('aria-label', 'Unwrap Lines');
-                    $(this).addClass('active');
-                } else {
-                    $textarea.css('white-space', 'pre');
-                    $(this).attr('title', 'Wrap Lines').attr('aria-label', 'Wrap Lines');
-                    $(this).removeClass('active');
-                }
-            });
-            function startLiveLog($btn) {
-                isLiveLogActive = true;
-                $btn.find('.icon-live-log-play').hide();
-                $btn.find('.icon-live-log-pause').show();
-                $btn.find('.live-log-btn-text').text('<?= $block->escapeJs(__('Stop Live Log')) ?>');
-                $btn.addClass('active');
-                $('#live-log-status').show().addClass('active');
-                liveLogInterval = setInterval(function() {
-                    checkForNewLogs();
-                }, 3000);
-            }
-            function stopLiveLog($btn) {
-                isLiveLogActive = false;
-                $btn.find('.icon-live-log-play').show();
-                $btn.find('.icon-live-log-pause').hide();
-                $btn.find('.live-log-btn-text').text('<?= $block->escapeJs(__('Start Live Log')) ?>');
-                $btn.removeClass('active');
-                $('#live-log-status').hide().removeClass('active');
-                if (liveLogInterval) {
-                    clearInterval(liveLogInterval);
-                    liveLogInterval = null;
-                }
-            }
-            function checkForNewLogs() {
-                let file = $('#toggle-live-log').data('file');
-                let ajaxUrl = '<?= $block->escapeJs($block->getLiveLogUrl()) ?>';
-                $.ajax({
-                    url: ajaxUrl,
-                    data: {
-                        file: file,
-                        last_size: lastLogSize,
-                        form_key: FORM_KEY
-                    },
-                    success: function (res) {
-                        if (res.success && res.new_content) {
-                            let $textarea = $('#log-output');
-                            let currentContent = $textarea.val();
-                            let newContent = currentContent + res.new_content;
-                            $textarea.val(newContent);
-                            lastLogSize = newContent.length;
-                            $textarea.scrollTop($textarea[0].scrollHeight);
-                        }
-                    },
-                    error: function() {
-                        stopLiveLog($('#toggle-live-log'));
-                    }
-                });
-            }
-            $(window).on('beforeunload', function() {
-                if (liveLogInterval) {
-                    clearInterval(liveLogInterval);
-                }
-            });
-        });
-    });
+<script type="text/x-magento-init">
+{
+    "*": {
+        "Mageprince_LogViewer/js/logfile-view": {
+            "searchUrl":      "<?= $block->escapeJs($searchUrl) ?>",
+            "logFile":        "<?= $block->escapeJs($logFile) ?>",
+            "previousLogUrl": "<?= $block->escapeJs($previousLogUrl) ?>",
+            "liveLogUrl":     "<?= $block->escapeJs($block->getLiveLogUrl()) ?>",
+            "isCompressedLog": <?= $isCompressedLog ? 'true' : 'false' ?>
+        }
+    }
+}
 </script>

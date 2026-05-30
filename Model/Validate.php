@@ -8,7 +8,7 @@ use Magento\Framework\Filesystem\Io\File;
 
 class Validate
 {
-    private const ALLOWED_EXTENSIONS = ['log', 'zip', 'tar', 'gz'];
+    public const ALLOWED_EXTENSIONS = ['log', 'zip', 'tar', 'gz'];
 
     /**
      * @var File

@@ -79,6 +79,16 @@ class LogFile extends Template
     }
 
     /**
+     * Retrieve full-file search url
+     *
+     * @return string
+     */
+    public function getSearchUrl()
+    {
+        return $this->getUrl('logviewer/logfile/search');
+    }
+
+    /**
      * Retrieve file name
      *
      * @return string
