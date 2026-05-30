@@ -77,6 +77,6 @@ If you encounter any problems or bugs, please <a href="https://github.com/magepr
 
 # 📸 Screenshots
 
-<img width="3402" height="2158" alt="image" src="https://github.com/user-attachments/assets/eb0cef0d-3ee5-4346-8607-551fca6938e6" />
-<img width="3400" height="2154" alt="1-log-list" src="https://github.com/user-attachments/assets/aa975dda-902e-4f24-b421-095e73ee88da" />
+<img width="3402" height="2158" alt="image" src="https://github.com/user-attachments/assets/3c7ac5ed-9ce9-4bf8-8fb3-ee69bcc4f84f" />
+<img width="3400" height="2154" alt="image" src="https://github.com/user-attachments/assets/d9ed8946-e27d-46a9-b808-1ff90c3e718e" />
 <img width="3398" height="2154" alt="3-admin-config" src="https://github.com/user-attachments/assets/1711da37-4128-4f7f-a44f-3422d6519988" />
