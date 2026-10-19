@@ -24,6 +24,7 @@ namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
 use Magento\Backend\App\Action\Context;
 use Magento\Backend\Controller\Adminhtml\System;
 use Magento\Framework\App\Response\Http\FileFactory;
+use Mageprince\LogViewer\Model\Config;
 use Mageprince\LogViewer\Model\Validate;
 
 class Download extends System
@@ -44,16 +45,24 @@ class Download extends System
     protected $validate;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * Download constructor.
      * @param Context $context
      * @param FileFactory $fileFactory
      * @param Validate $validate
+     * @param Config $config
      */
     public function __construct(
         Context $context,
         FileFactory $fileFactory,
-        Validate $validate
+        Validate $validate,
+        Config $config
     ) {
+        $this->config = $config;
         $this->fileFactory = $fileFactory;
         $this->validate = $validate;
         parent::__construct($context);
@@ -95,6 +104,6 @@ class Download extends System
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
+        return $this->config->isDownloadAllowed() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

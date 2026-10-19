@@ -19,30 +19,53 @@
  * @license     https://mageprince.com/end-user-license-agreement
  */
 
-namespace Mageprince\LogViewer\Controller\Adminhtml\LogFile;
+namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
+use Mageprince\LogViewer\Model\Config;
 use Mageprince\LogViewer\Model\FileViewer;
+use Mageprince\LogViewer\Model\Validate;
 
 class LiveUpdate extends Action
 {
+    /**
+     * Authorization level of a basic admin session
+     */
+    public const ADMIN_RESOURCE = 'Mageprince_LogViewer::log_viewer_view';
+
     /**
      * @var FileViewer
      */
     protected $fileViewer;
 
     /**
+     * @var Validate
+     */
+    protected $validate;
+
+    /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * @param Context $context
      * @param FileViewer $fileViewer
+     * @param Validate $validate
+     * @param Config $config
      */
     public function __construct(
         Action\Context $context,
-        FileViewer $fileViewer
+        FileViewer $fileViewer,
+        Validate $validate,
+        Config $config
     ) {
         $this->fileViewer = $fileViewer;
+        $this->validate = $validate;
+        $this->config = $config;
         parent::__construct($context);
     }
 
@@ -61,10 +84,23 @@ class LiveUpdate extends Action
         }
 
         $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-        $file = $this->getRequest()->getParam('file');
-        $lastSize = (int)$this->getRequest()->getParam('last_size', 0);
-        $logPath = BP . '/var/log/' . $file;
+        $file = (string)$this->getRequest()->getParam('file', '');
+        $lastSize = max(0, (int)$this->getRequest()->getParam('last_size', 0));
 
+        try {
+            $isValid = $this->validate->validateFile($file);
+        } catch (\Exception $e) {
+            $isValid = false;
+        }
+
+        if (!$isValid) {
+            return $resultJson->setData([
+                'success' => false,
+                'message' => __('Invalid file.')
+            ]);
+        }
+
+        $logPath = BP . '/var/log/' . $file;
         if (!$this->fileViewer->isReadable($logPath)) {
             return $resultJson->setData([
                 'success' => false,
@@ -83,5 +119,13 @@ class LiveUpdate extends Action
             'new_content' => $newContent,
             'current_size' => $currentSize
         ]);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function _isAllowed()
+    {
+        return $this->config->isEnabled() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

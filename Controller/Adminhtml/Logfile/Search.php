@@ -25,6 +25,7 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
+use Mageprince\LogViewer\Model\Config;
 use Mageprince\LogViewer\Model\Validate;
 
 class Search extends Action
@@ -50,13 +51,21 @@ class Search extends Action
     private $validate;
 
     /**
+     * @var Config
+     */
+    private $config;
+
+    /**
      * @param Context $context
      * @param Validate $validate
+     * @param Config $config
      */
     public function __construct(
         Context $context,
-        Validate $validate
+        Validate $validate,
+        Config $config
     ) {
+        $this->config = $config;
         $this->validate = $validate;
         parent::__construct($context);
     }
@@ -320,6 +329,6 @@ class Search extends Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
+        return $this->config->isEnabled() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

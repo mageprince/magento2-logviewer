@@ -31,6 +31,8 @@ $logPath = BP . '/var/log/' . $logFile;
 $previousLogUrl = $block->getLoadPreviousLogUrl();
 $searchUrl = $block->getSearchUrl();
 $isCompressedLog = strtolower(substr((string)$logFile, -3)) === '.gz';
+// Read the size before the tail so a line appended in between is picked up by Live Log, not lost
+$logFileSize = $block->getFileSize($logPath);
 $liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live Log');
 ?>
 <div class="live-log-status" id="live-log-status" style="display: none; margin-bottom: 10px;">
@@ -110,7 +112,12 @@ $liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live L
             </a>
         <?php endif; ?>
     </div>
-    <textarea id="log-output" rows="35" style="white-space:pre; width:100%; clear:both;"><?= /* @noEscape */  $block->tailFile($logPath, $displayLines) ?></textarea>
+    <?php
+    // Log lines are untrusted. escapeHtml() doesn't double-encode, so encode "&" first,
+    // or entities already in the log (e.g. "&lt;") would show decoded in the textarea.
+    $logTail = str_replace('&', '&amp;', (string)$block->tailFile($logPath, $displayLines));
+    ?>
+    <textarea id="log-output" rows="35" style="white-space:pre; width:100%; clear:both;"><?= $block->escapeHtml($logTail) ?></textarea>
 </div>
 <script type="text/x-magento-init">
 {
@@ -120,7 +127,8 @@ $liveLogLabel = $isCompressedLog ? __('Live Log Unavailable') : __('Start Live L
             "logFile":        "<?= $block->escapeJs($logFile) ?>",
             "previousLogUrl": "<?= $block->escapeJs($previousLogUrl) ?>",
             "liveLogUrl":     "<?= $block->escapeJs($block->getLiveLogUrl()) ?>",
-            "isCompressedLog": <?= $isCompressedLog ? 'true' : 'false' ?>
+            "isCompressedLog": <?= $isCompressedLog ? 'true' : 'false' ?>,
+            "logFileSize":    <?= (int)$logFileSize ?>
         }
     }
 }

@@ -23,6 +23,7 @@ namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
 
 use Magento\Backend\App\Action;
 use Magento\Framework\View\Result\PageFactory;
+use Mageprince\LogViewer\Model\Config;
 
 class Index extends Action
 {
@@ -37,14 +38,22 @@ class Index extends Action
     protected $resultPageFactory;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * Index constructor.
      * @param Action\Context $context
      * @param PageFactory $resultPageFactory
+     * @param Config $config
      */
     public function __construct(
         Action\Context $context,
-        PageFactory $resultPageFactory
+        PageFactory $resultPageFactory,
+        Config $config
     ) {
+        $this->config = $config;
         parent::__construct($context);
         $this->resultPageFactory = $resultPageFactory;
     }
@@ -67,6 +76,6 @@ class Index extends Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
+        return $this->config->isEnabled() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

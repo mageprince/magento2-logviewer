@@ -111,6 +111,28 @@ class LogFile extends Template
     }
 
     /**
+     * Retrieve current file size in bytes, used as the Live Log starting offset
+     *
+     * Returns 0 for .gz files: Live Log is unavailable for them and sizing one
+     * would mean decompressing the whole file.
+     *
+     * @param string $filePath
+     * @return int
+     */
+    public function getFileSize($filePath)
+    {
+        if (strtolower(substr((string)$filePath, -3)) === '.gz') {
+            return 0;
+        }
+
+        try {
+            return (int)$this->fileViewer->getFileSize($filePath);
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
      * Retrieve lines per page count
      *
      * @return int
