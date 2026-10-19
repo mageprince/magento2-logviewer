@@ -24,6 +24,7 @@ namespace Mageprince\LogViewer\Controller\Adminhtml\Logfile;
 use Magento\Backend\App\Action\Context;
 use Magento\Backend\Controller\Adminhtml\System;
 use Magento\Framework\Filesystem\Driver\File;
+use Mageprince\LogViewer\Model\Config;
 use Mageprince\LogViewer\Model\Validate;
 
 class Delete extends System
@@ -44,16 +45,24 @@ class Delete extends System
     protected $validate;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * Delete constructor.
      * @param Context $context
      * @param File $driver
      * @param Validate $validate
+     * @param Config $config
      */
     public function __construct(
         Context $context,
         File $driver,
-        Validate $validate
+        Validate $validate,
+        Config $config
     ) {
+        $this->config = $config;
         $this->driver = $driver;
         $this->validate = $validate;
         parent::__construct($context);
@@ -93,6 +102,6 @@ class Delete extends System
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
+        return $this->config->isDeleteAllowed() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

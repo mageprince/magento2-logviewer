@@ -7,11 +7,12 @@ define(['jquery', 'mage/translate'], function ($, $t) {
             previousLogUrl  = config.previousLogUrl,
             liveLogUrl      = config.liveLogUrl,
             isCompressedLog = config.isCompressedLog,
+            logFileSize     = parseInt(config.logFileSize, 10) || 0,
             MAX_QUERY_LENGTH = 500;
 
         $(function () {
             var liveLogInterval   = null,
-                lastLogSize       = $('#log-output').val().length,
+                lastLogSize       = logFileSize, // byte offset into the file, not textarea length
                 isLiveLogActive   = false,
                 isWrapLines       = false,
                 searchMode        = false,
@@ -184,15 +185,19 @@ define(['jquery', 'mage/translate'], function ($, $t) {
                         form_key: window.FORM_KEY
                     },
                     success: function (res) {
-                        var $textarea, newContent;
+                        var $textarea;
 
-                        if (res.success && res.new_content) {
-                            $textarea  = $('#log-output');
-                            newContent = $textarea.val() + res.new_content;
-                            $textarea.val(newContent);
-                            lastLogSize = newContent.length;
+                        if (!res.success) {
+                            return;
+                        }
+
+                        if (res.new_content) {
+                            $textarea = $('#log-output');
+                            $textarea.val($textarea.val() + res.new_content);
                             $textarea.scrollTop($textarea[0].scrollHeight);
                         }
+
+                        lastLogSize = parseInt(res.current_size, 10) || 0;
                     },
                     error: function () {
                         stopLiveLog($('#toggle-live-log'));
@@ -258,9 +263,9 @@ define(['jquery', 'mage/translate'], function ($, $t) {
                     success: function (res) {
                         if (res.success) {
                             if (res.data.trim()) {
-                                $('#log-output').prepend(res.data + '\n');
+                                // .val(), not .prepend(): once Live Log has set the value, DOM text changes no longer show
+                                $('#log-output').val(res.data + '\n' + $('#log-output').val());
                                 $btn.data('start', start + displayLines);
-                                lastLogSize = $('#log-output').val().length;
                             }
 
                             if (!res.has_more) {

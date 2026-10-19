@@ -25,7 +25,9 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Mageprince\LogViewer\Model\Config;
 use Mageprince\LogViewer\Model\FileViewer;
+use Mageprince\LogViewer\Model\Validate;
 
 class LoadPrevious extends Action
 {
@@ -45,18 +47,34 @@ class LoadPrevious extends Action
     protected $fileViewer;
 
     /**
+     * @var Validate
+     */
+    protected $validate;
+
+    /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * LoadPrevious constructor.
      * @param Context $context
      * @param JsonFactory $jsonFactory
      * @param FileViewer $fileViewer
+     * @param Validate $validate
+     * @param Config $config
      */
     public function __construct(
         Action\Context $context,
         JsonFactory $jsonFactory,
-        FileViewer $fileViewer
+        FileViewer $fileViewer,
+        Validate $validate,
+        Config $config
     ) {
         $this->jsonFactory = $jsonFactory;
         $this->fileViewer = $fileViewer;
+        $this->validate = $validate;
+        $this->config = $config;
         parent::__construct($context);
     }
 
@@ -76,9 +94,21 @@ class LoadPrevious extends Action
 
         $result = $this->jsonFactory->create();
 
-        $file = $this->getRequest()->getParam('file');
-        $offset = (int) $this->getRequest()->getParam('offset');
-        $lines = (int) $this->getRequest()->getParam('lines');
+        $file = (string)$this->getRequest()->getParam('file', '');
+
+        try {
+            $isValid = $this->validate->validateFile($file);
+        } catch (\Exception $e) {
+            $isValid = false;
+        }
+
+        if (!$isValid) {
+            return $result->setData(['success' => false, 'message' => __('Invalid file.')]);
+        }
+
+        // Clamp paging params: no negative offsets, and never more than one configured page at a time
+        $offset = max(0, (int)$this->getRequest()->getParam('offset'));
+        $lines = min(max(1, (int)$this->getRequest()->getParam('lines')), $this->config->getLinesToShow());
         $filePath = BP . '/var/log/' . $file;
 
         $data = $this->fileViewer->tailFile($filePath, $lines, $offset);
@@ -96,6 +126,6 @@ class LoadPrevious extends Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
+        return $this->config->isEnabled() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }

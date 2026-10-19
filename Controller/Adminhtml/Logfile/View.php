@@ -26,6 +26,7 @@ use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\View\Result\PageFactory;
+use Mageprince\LogViewer\Model\Config;
 use Mageprince\LogViewer\Model\Validate;
 
 class View extends Action
@@ -46,16 +47,24 @@ class View extends Action
     protected $validate;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
      * View constructor.
      * @param Context $context
      * @param PageFactory $resultPageFactory
      * @param Validate $validate
+     * @param Config $config
      */
     public function __construct(
         Action\Context $context,
         PageFactory $resultPageFactory,
-        Validate $validate
+        Validate $validate,
+        Config $config
     ) {
+        $this->config = $config;
         $this->resultPageFactory = $resultPageFactory;
         $this->validate = $validate;
         parent::__construct($context);
@@ -92,6 +101,6 @@ class View extends Action
      */
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
+        return $this->config->isEnabled() && $this->_authorization->isAllowed(self::ADMIN_RESOURCE);
     }
 }
